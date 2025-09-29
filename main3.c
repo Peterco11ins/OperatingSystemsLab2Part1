@@ -7,7 +7,7 @@
 void child_process(void);
 
 int main(void) {
-    int i;          // declare loop counter here
+    int i;          // loop counter
     pid_t pid;
 
     // create exactly 2 children
@@ -19,7 +19,7 @@ int main(void) {
         }
         if (pid == 0) {
             child_process();
-            _exit(0); // safety: ensure child exits
+            _exit(0); // ensure child terminates
         }
     }
 
@@ -32,13 +32,14 @@ int main(void) {
             return 1;
         }
         if (WIFEXITED(status)) {
-            printf("Child pid %d completed with exit status %d\n",
+            printf("Child Pid: %d has completed with exit status %d\n",
                    completed, WEXITSTATUS(status));
         } else if (WIFSIGNALED(status)) {
-            printf("Child pid %d terminated by signal %d\n",
+            printf("Child Pid: %d terminated by signal %d\n",
                    completed, WTERMSIG(status));
         } else {
-            printf("Child pid %d ended (status=0x%x)\n", completed, status);
+            printf("Child Pid: %d ended abnormally (status=0x%x)\n",
+                   completed, status);
         }
     }
     return 0;
@@ -47,19 +48,22 @@ int main(void) {
 void child_process(void) {
     pid_t pid = getpid();
     pid_t ppid = getppid();
+    int k, loops, sleep_secs;
 
-    int k;  // loop counter declared outside the for loop
-
-    // seed RNG per process
+    // seed RNG uniquely per process
     srandom((unsigned)(pid ^ (pid >> 16)));
 
-    // each child sleeps and wakes twice
-    for (k = 0; k < 2; k++) {
-        int sleep_secs = 1 + (int)(random() % 10);  // 1..10
-        printf("Child pid %d sleeping for %d second(s)…\n", pid, sleep_secs);
-        fflush(stdout);
+    // random number of iterations, up to 30
+    loops = 1 + (int)(random() % 30);
+
+    for (k = 0; k < loops; k++) {
+        sleep_secs = 1 + (int)(random() % 10);  // 1–10 seconds
+        printf("Child Pid: %d is going to sleep for %d second(s)!\n",
+               pid, sleep_secs);
+        fflush(stdout); // flush so it prints before sleeping
         sleep(sleep_secs);
-        printf("Child pid %d is awake! Where is my parent %d?\n", pid, ppid);
+        printf("Child Pid: %d is awake!\nWhere is my Parent: %d?\n",
+               pid, ppid);
     }
 
     exit(0);
